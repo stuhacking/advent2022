@@ -1,0 +1,1122 @@
+#+TITLE:  Advent of Code 2022
+#+AUTHOR: Stu
+#+EMAIL:  stuhacking@gmail.com
+#+DATE:   [2022-11-28 15:14]
+
+#+EXPORT_FILE_NAME: advent2022
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+#+OPTIONS: num:0
+
+* Introduction
+
+  [[https://adventofcode.com/2022][Advent of Code 2022]] literate Clojure. To run code blocks in this file, you'll
+  probably want to have a recent version of [[http://gnu.org/software/emacs][Emacs]] with [[http://orgmode.org][Org-Mode]] 9 or later, and
+  [[http://cider.mx][Cider]] installed to start up the Clojure REPL.
+
+  Some of the problems might be stand-alone and some might build on earlier
+  solutions. In the past each day has usually had a couple of variations on a
+  problem's theme, e.g. a simpler and a tougher challenge. For this reason, I'm
+  not initially going to tangle the code into different packages. Just run
+  =cider-jack-in= to start the REPL and then evaluate the code in the =*user*=
+  namespace.
+
+* Ch 1: Calorie Counting
+  :PROPERTIES:
+  :header-args: :tangle src/chapter1.clj
+  :END:
+
+  Santa's reindeer typically eat regular reindeer food, but they need a lot of
+  /magical energy/ to deliver presents on Christmas. For that, their favorite
+  snack is a special type of *star* fruit that only grows deep in the jungle. The
+  Elves have brought you on their annual expedition to the grove where the fruit
+  grows.
+
+  To supply enough magical energy, the expedition needs to retrieve a minimum of
+  *fifty stars* by December 25th. Although the Elves assure you that the grove has
+  plenty of fruit, you decide to grab any fruit you see along the way, just in
+  case.
+
+  Collect stars by solving puzzles. Two puzzles will be made available on each
+  day in the Advent calendar; the second puzzle is unlocked when you complete
+  the first. Each puzzle grants *one star*. Good luck!
+
+** DONE Part One
+   CLOSED: [2022-12-02 Fri 13:37] SCHEDULED: <2022-12-01 Thu>
+
+   The jungle must be too overgrown and difficult to navigate in vehicles or
+   access from the air; the Elves' expedition traditionally goes on foot. As your
+   boats approach land, the Elves begin taking inventory of their supplies. One
+   important consideration is food - in particular, the number of /Calories/ each
+   Elf is carrying (your puzzle input).
+
+   The Elves take turns writing down the number of Calories contained by the
+   various meals, snacks, rations, etc. that they've brought with them, one item
+   per line. Each Elf separates their own inventory from the previous Elf's
+   inventory (if any) by a blank line.
+
+   For example, suppose the Elves finish writing their items' Calories and end up
+   with the following list:
+
+   #+NAME: elf-inventory
+   #+BEGIN_SRC clojure
+     (def day1-data (slurp "resources/day1_input.txt"))
+
+     (def elf-inventory
+       (->> (clojure.string/split day1-data #"\n\n")
+            (map (fn [coll] (clojure.string/split-lines coll)))
+            (mapv #(mapv (fn [x] (Integer/parseInt x)) %))))
+   #+END_SRC
+
+   #+RESULTS: elf-inventory
+   | #'advent2022.core/day1-data     |
+   | #'advent2022.core/elf-inventory |
+
+   This list represents the Calories of the food carried by five Elves, e.g:
+
+   - The first Elf is carrying food with 1000, 2000, and 3000 Calories, a total
+     of /6000/ Calories.
+   - The second Elf is carrying one food item with /4000/ Calories.
+   - The third Elf is carrying food with 5000 and 6000 Calories, a total of /11000/
+     Calories.
+   - The fourth Elf is carrying food with 7000, 8000, and 9000 Calories, a total
+     of /24000/ Calories.
+   - The fifth Elf is carrying one food item with /10000/ Calories.
+
+   In case the Elves get hungry and need extra snacks, they need to know which
+   Elf to ask: they'd like to know how many Calories are being carried by the Elf
+   carrying the /most/ Calories. In the example above, this is /24000/ (carried by
+   the fourth Elf).
+
+   Find the Elf carrying the most Calories. /How many total Calories is that Elf
+   carrying?/
+
+   Alright then elves, everyone sum up the amount you're carrying.
+
+   #+NAME: elf-totals
+   #+BEGIN_SRC clojure
+     (def elf-totals
+       (mapv #(reduce + %) elf-inventory))
+   #+END_SRC
+
+   #+RESULTS: elf-totals
+   : #'advent2022.core/elf-totals
+
+   Now, who has the most /calories/ here, how many?
+
+   #+NAME: highest-scoring-elf
+   #+BEGIN_SRC clojure
+     (reduce max elf-totals)
+   #+END_SRC
+
+   #+RESULTS: highest-scoring-elf
+   : 66186
+
+** DONE Part Two
+   CLOSED: [2022-12-02 Fri 13:37] SCHEDULED: <2022-12-01 Thu>
+
+   By the time you calculate the answer to the Elves' question, they've already
+   realized that the Elf carrying the most Calories of food might eventually /run
+   out of snacks/.
+
+   To avoid this unacceptable situation, the Elves would instead like to know
+   the total Calories carried by the /top three/ Elves carrying the most
+   Calories. That way, even if one of those Elves runs out of snacks, they still
+   have two backups.
+
+   In the example above, the top three Elves are the fourth Elf (with 24000
+   Calories), then the third Elf (with 11000 Calories), then the fifth Elf (with
+   10000 Calories). The sum of the Calories carried by these three elves
+   is /45000/.
+
+   Find the top three Elves carrying the most Calories. /How many Calories are
+   those Elves carrying in total?/
+
+   Alright then elves, line up in order of how much snacks you brought, then the
+   three at the front can sum up their amounts.
+
+   #+NAME: ordered-elves
+   #+BEGIN_SRC clojure
+     (def sorted-elves
+       (reverse (sort elf-totals)))
+   #+END_SRC
+
+   #+Results: ordered-elves
+   : #'advent2022.core/sorted-elves
+
+   #+NAME: top-three
+   #+BEGIN_SRC clojure
+     (reduce + (take 3  sorted-elves))
+   #+END_SRC
+
+   #+RESULTS: top-three
+   : 196804
+
+
+* Ch 2: Rock Paper Scissors
+  :PROPERTIES:
+  :header-args: :tangle src/chapter2.clj
+  :END:
+
+  The Elves begin to set up camp on the beach. To decide whose tent gets to be
+  closest to the snack storage, a giant *Rock Paper Scissors* tournament is
+  already in progress.
+
+  Rock Paper Scissors is a game between two players. Each game contains many
+  rounds; in each round, the players each simultaneously choose one of Rock,
+  Paper, or Scissors using a hand shape. Then, a winner for that round is
+  selected: Rock defeats Scissors, Scissors defeats Paper, and Paper defeats
+  Rock. If both players choose the same shape, the round instead ends in a draw.
+
+** DONE Part One
+   CLOSED: [2022-12-02 Fri 15:36] SCHEDULED: <2022-12-02 Fri>
+
+   Appreciative of your help yesterday, one Elf gives you an /encrypted strategy
+   guide/ (your puzzle input) that they say will be sure to help you win. "The
+   first column is what your opponent is going to play: A for Rock, B for Paper,
+   and C for Scissors. The second column--" Suddenly, the Elf is called away to
+   help with someone's tent.
+
+   #+BEGIN_SRC clojure
+     (def day2-data (slurp "resources/day2_input.txt"))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/day2-data
+
+   The second column, you reason, must be what you should play in response: X for
+   Rock, Y for Paper, and Z for Scissors. Winning every time would be suspicious,
+   so the responses must have been carefully chosen.
+
+   #+BEGIN_SRC clojure
+     (def code->item
+       {"A" :rock
+        "B" :paper
+        "C" :scissors
+        "X" :rock
+        "Y" :paper
+        "Z" :scissors})
+
+     (def rounds
+       (->> (clojure.string/split-lines day2-data)
+            (mapv #(clojure.string/split % #"[ ]+"))
+            (mapv #(mapv code->item %))))
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/code->item |
+   | #'advent2022.core/rounds     |
+
+
+   The winner of the whole tournament is the player with the highest score. Your
+   /total score/ is the sum of your scores for each round. The score for a single
+   round is the score for the /shape you selected/ (1 for Rock, 2 for Paper, and 3
+   for Scissors) plus the score for the /outcome of the round/ (0 if you lost, 3 if
+   the round was a draw, and 6 if you won).
+
+   #+BEGIN_SRC clojure
+     (defn score-round [[response outcome]]
+       (let [item-scores {:rock 1, :paper 2, :scissors 3}
+             outcome-scores {:win 6, :draw 3, :loss 0}]
+         (+ (response item-scores)
+            (outcome outcome-scores))))
+
+     (defn beats [a b]
+       (if (= a b)
+         :draw
+         (if (or (and (= a :rock) (= b :scissors))
+                 (and (= a :scissors) (= b :paper))
+                 (and (= a :paper) (= b :rock)))
+           :win
+           :loss)))
+
+     (defn play-round [challenge response]
+       [response (beats response challenge)])
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/score-round |
+   | #'advent2022.core/beats       |
+   | #'advent2022.core/play-round  |
+
+   Since you can't be sure if the Elf is trying to help you or trick you, you
+   should calculate the score you would get if you were to follow the strategy
+   guide.
+
+   For example, suppose you were given the following strategy guide:
+
+   #+BEGIN_EXAMPLE
+     A Y
+     B X
+     C Z
+   #+END_EXAMPLE
+
+   This strategy guide predicts and recommends the following:
+
+   - In the first round, your opponent will choose Rock (A), and you should
+     choose Paper (Y). This ends in a win for you with a score of /8/ (2 because
+     you chose Paper + 6 because you won).
+   - In the second round, your opponent will choose Paper (B), and you should
+     choose Rock (X). This ends in a loss for you with a score of /1/ (1 + 0).
+   - The third round is a draw with both players choosing Scissors, giving you a
+     score of 3 + 3 = /6/.
+
+   In this example, if you were to follow the strategy guide, you would get a
+   total score of /15/ (8 + 1 + 6).
+
+   #+NAME: scoring-test
+   #+BEGIN_SRC clojure
+     (for [round [(play-round :rock :paper)
+                  (play-round :paper :rock)
+                  (play-round :scissors :scissors)]]
+       (format "%s = %d" round (score-round round)))
+   #+END_SRC
+
+   #+RESULTS: scoring-test
+   | [:paper :win] = 8 | [:rock :loss] = 1 | [:scissors :draw] = 6 |
+
+   What would your total score be if everything goes exactly according to your
+   strategy guide?
+
+   #+NAME: score-guessed-strategy
+   #+BEGIN_SRC clojure
+     (->> rounds
+          (map #(apply play-round %))
+          (map score-round)
+          (reduce +))
+   #+END_SRC
+
+   #+RESULTS: score-guessed-strategy
+   : 10941
+
+** DONE Part Two
+   CLOSED: [2022-12-02 Fri 15:36] SCHEDULED: <2022-12-02 Fri>
+
+   The Elf finishes helping with the tent and sneaks back over to you. "Anyway,
+   the second column says how the round needs to end: X means you need to lose,
+   Y means you need to end the round in a draw, and Z means you need to
+   win. Good luck!"
+
+   #+BEGIN_SRC clojure
+     (def code->outcome
+       {"X" :loss
+        "Y" :draw
+        "Z" :win})
+
+     (def round-strategies
+       (->> (clojure.string/split-lines day2-data)
+            (mapv #(clojure.string/split % #"[ ]+"))
+            (mapv (fn [x] [(code->item (nth x 0)) (code->outcome (nth x 1))]))))
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/code->outcome    |
+   | #'advent2022.core/round-strategies |
+
+   The total score is still calculated in the same way, but now you need to
+   figure out what shape to choose so the round ends as indicated. The example
+   above now goes like this:
+
+   - In the first round, your opponent will choose Rock (A), and you need the
+     round to end in a draw (Y), so you also choose Rock. This gives you a score
+     of 1 + 3 = /4/.
+   - In the second round, your opponent will choose Paper (B), and you choose
+     Rock so you lose (X) with a score of 1 + 0 = /1/.
+   - In the third round, you will defeat your opponent's Scissors with Rock for
+     a score of 1 + 6 = /7/.
+
+   #+BEGIN_SRC clojure
+     (defn choose-response [challenge outcome]
+       (cond (= outcome :draw) challenge
+             (= outcome :win) (case challenge
+                                :rock :paper
+                                :paper :scissors
+                                :scissors :rock)
+             (= outcome :loss) (case challenge
+                                 :rock :scissors
+                                 :scissors :paper
+                                 :paper :rock)))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/choose-response
+
+   Now that you're correctly decrypting the ultra top secret strategy guide, you
+   would get a total score of 12.
+
+   Following the Elf's instructions for the second column, /what would your total
+   score be if everything goes exactly according to your strategy guide?/
+
+   #+BEGIN_SRC clojure
+     (def calculated-rounds
+       (mapv (fn [x]
+               [(nth x 0) (apply choose-response x)])
+             round-strategies))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/calculated-rounds
+
+   #+NAME: score-corrected-strategy
+   #+BEGIN_SRC clojure
+     (->> calculated-rounds
+          (map #(apply play-round %))
+          (map score-round)
+          (reduce +))
+
+   #+END_SRC
+
+   #+RESULTS: score-corrected-strategy
+   : 13071
+
+
+* Ch 3: Rucksack Reorganisation
+  :PROPERTIES:
+  :header-args: :tangle src/chapter3.clj
+  :END:
+
+  One Elf has the important job of loading all of the *rucksacks* with supplies
+  for the jungle journey. Unfortunately, that Elf didn't quite follow the
+  packing instructions, and so a few items now need to be rearranged.
+
+  Each rucksack has two large /compartments/. All items of a given type are
+  meant to go into exactly one of the two compartments. The Elf that did the
+  packing failed to follow this rule for exactly one item type per rucksack.
+
+  The Elves have made a list of all of the items currently in each rucksack
+  (your puzzle input), but they need your help finding the errors. Every item
+  type is identified by a single lowercase or uppercase letter (that is, =a= and
+  =A= refer to different types of items).
+
+** DONE Part One
+   CLOSED: [2022-12-03 Sat 10:04] SCHEDULED: <2022-12-03 Sat>
+
+   The list of items for each rucksack is given as characters all on a single
+   line. A given rucksack always has the same number of items in each of its two
+   compartments, so the first half of the characters represent items in the first
+   compartment, while the second half of the characters represent items in the
+   second compartment.
+
+   #+BEGIN_SRC clojure
+     (def day3-data (slurp "resources/day3_input.txt"))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/day3-data
+
+   For example, suppose you have the following list of contents from six
+   rucksacks:
+
+   #+BEGIN_EXAMPLE
+     vJrwpWtwJgWrhcsFMMfFFhFp
+     jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+     PmmdzqPrVvPwwTWBwg
+     wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+     ttgJtRGJQctTZtZT
+     CrZsJsPPZsGzwwsLwLmpwMDw
+   #+END_EXAMPLE
+
+   - The first rucksack contains the items =vJrwpWtwJgWrhcsFMMfFFhFp=, which
+     means its first compartment contains the items =vJrwpWtwJgWr=, while the
+     second compartment contains the items =hcsFMMfFFhFp=. The only item type
+     that appears in both compartments is lowercase /p/.
+   - The second rucksack's compartments contain =jqHRNqRjqzjGDLGL= and
+     =rsFMfFZSrLrFZsSL=. The only item type that appears in both compartments is
+     uppercase /L/.
+   - The third rucksack's compartments contain =PmmdzqPrV= and =vPwwTWBwg=; the
+     only common item type is uppercase /P/.
+   - The fourth rucksack's compartments only share item type /v/.
+   - The fifth rucksack's compartments only share item type /t/.
+   - The sixth rucksack's compartments only share item type /s/.
+
+   #+BEGIN_SRC clojure
+     (def rucksacks (clojure.string/split-lines day3-data))
+
+     (def rucksack-compartments
+       (map (fn [s] (partition (/ (count s) 2) s)) rucksacks))
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/rucksacks             |
+   | #'advent2022.core/rucksack-compartments |
+
+   To help prioritize item rearrangement, every item type can be converted to a
+   priority:
+
+   - Lowercase item types a through z have priorities 1 through 26.
+   - Uppercase item types A through Z have priorities 27 through 52.
+
+   In the above example, the priority of the item type that appears in both
+   compartments of each rucksack is 16 (p), 38 (L), 42 (P), 22 (v), 20 (t), and
+   19 (s); the sum of these is 157.
+
+   #+BEGIN_SRC clojure
+     (defn priority [item]
+       (let [n (int item)]
+         (cond (and (>= n (int \a)) (<= n (int \z))) (- n (dec (int \a)))
+               (and (>= n (int \A)) (<= n (int \Z))) (+ 26 (- n (dec (int \A))))
+               :else 0)))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/priority
+
+   Find the item type that appears in both compartments of each rucksack. /What
+   is the sum of the priorities of those item types?/
+
+   #+BEGIN_SRC clojure
+     (defn find-duplicate-items [rucksacks]
+       (->> rucksacks
+            (map (fn [n]
+                   (clojure.set/intersection (set (nth n 0))
+                                             (set (nth n 1)))))))
+
+     (def rucksack-duplicates (find-duplicate-items rucksack-compartments))
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/find-duplicate-items |
+   | #'advent2022.core/rucksack-duplicates  |
+
+   #+NAME: duplicate-item-priority-sum
+   #+BEGIN_SRC clojure
+     (->> rucksack-duplicates
+          (map #(map priority %))
+          (map #(reduce + %))
+          (reduce +))
+   #+END_SRC
+
+   #+RESULTS: duplicate-item-priority-sum
+   : 8139
+
+** DONE Part Two
+   CLOSED: [2022-12-03 Sat 10:04] SCHEDULED: <2022-12-03 Sat>
+
+   As you finish identifying the misplaced items, the Elves come to you with
+   another issue.
+
+   The problem is that someone forgot to put this year's updated authenticity
+   sticker on the badges. All of the badges need to be pulled out of the
+   rucksacks so the new authenticity stickers can be attached.
+
+   For safety, the Elves are divided into groups of three. Every Elf carries a
+   badge that identifies their group. For efficiency, within each group of three
+   Elves, the badge is the /only item type carried by all three Elves/. That is,
+   if a group's badge is item type =B=, then all three Elves will have item type
+   =B= somewhere in their rucksack, and at most two of the Elves will be
+   carrying any other item type.
+
+   Additionally, nobody wrote down which item type corresponds to each group's
+   badges. The only way to tell which item type is the right one is by finding
+   the one item type that is /common between all three Elves/ in each group.
+
+   Every set of three lines in your list corresponds to a single group, but each
+   group can have a different badge item type. So, in the above example, the
+   first group's rucksacks are the first three lines:
+
+   #+BEGIN_EXAMPLE
+     vJrwpWtwJgWrhcsFMMfFFhFp
+     jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+     PmmdzqPrVvPwwTWBwg
+   #+END_EXAMPLE
+
+   And the second group's rucksacks are the next three lines:
+
+   #+BEGIN_EXAMPLE
+     wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+     ttgJtRGJQctTZtZT
+     CrZsJsPPZsGzwwsLwLmpwMDw
+   #+END_EXAMPLE
+
+   In the first group, the only item type that appears in all three rucksacks is
+   lowercase =r=; this must be their badges. In the second group, their badge item
+   type must be =Z=.
+
+   #+BEGIN_SRC clojure
+     (def grouped-rucksacks
+       (partition 3 rucksacks))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/grouped-rucksacks
+
+   Priorities for these items must still be found to organize the sticker
+   attachment efforts: here, they are 18 (r) for the first group and 52 (Z) for
+   the second group. The sum of these is /70/.
+
+   Find the item type that corresponds to the badges of each three-Elf
+   group. /What is the sum of the priorities of those item types?/
+
+   #+BEGIN_SRC clojure
+     (def badge-id-per-group
+       (->> grouped-rucksacks
+            (map #(map set %))
+            (map #(apply clojure.set/intersection %))))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/badge-id-per-group
+
+   #+NAME: sum-of-badge-type-priorities
+   #+BEGIN_SRC clojure
+     (->> badge-id-per-group
+          (map #(map priority %))
+          (map #(reduce + %))
+          (reduce +))
+   #+END_SRC
+
+   #+RESULTS: sum-of-badge-type-priorities
+   : 2668
+
+
+* Ch 4: Camp Cleanup
+  :PROPERTIES:
+  :header-args: :tangle src/chapter4.clj
+  :END:
+
+** DONE Part One
+   CLOSED: [2022-12-04 Sun 18:26] SCHEDULED: <2022-12-04 Sun>
+
+   Space needs to be cleared before the last supplies can be unloaded from the
+   ships, and so several Elves have been assigned the job of cleaning up sections
+   of the camp. Every section has a unique /ID number/, and each Elf is assigned a
+   range of section IDs.
+
+   However, as some of the Elves compare their section assignments with each
+   other, they've noticed that many of the assignments /overlap/. To try to
+   quickly find overlaps and reduce duplicated effort, the Elves pair up and make
+   a /big list of the section assignments for each pair/ (your puzzle input).
+
+   #+BEGIN_SRC clojure
+     (def day4-data (slurp "resources/day4_input.txt"))
+
+     (defn parse-assignment [s]
+       (let [[l1 l2 r1 r2]
+             (mapv #(Integer/parseInt %) (clojure.string/split s #"[,-]"))]
+         [[l1 l2] [r1 r2]]))
+
+     (def assignments
+       (->> (clojure.string/split-lines day4-data)
+            (map parse-assignment)))
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/day4-data        |
+   | #'advent2022.core/parse-assignment |
+   | #'advent2022.core/assignments      |
+
+   For example, consider the following list of section assignment pairs:
+
+   #+BEGIN_EXAMPLE
+     2-4,6-8
+     2-3,4-5
+     5-7,7-9
+     2-8,3-7
+     6-6,4-6
+     2-6,4-8
+   #+END_EXAMPLE
+
+   For the first few pairs, this list means:
+
+   - Within the first pair of Elves, the first Elf was assigned sections =2-4=
+     (sections =2=, =3=, and =4=), while the second Elf was assigned sections
+     =6-8= (sections =6=, =7=, =8=).
+   - The Elves in the second pair were each assigned two sections.
+   - The Elves in the third pair were each assigned three sections: one got
+     sections =5=, =6=, and =7=, while the other also got =7=, plus =8= and =9=.
+
+   This example list uses single-digit section IDs to make it easier to draw;
+   your actual list might contain larger numbers. Visually, these pairs of
+   section assignments look like this:
+
+   #+BEGIN_EXAMPLE
+     .234.....  2-4
+     .....678.  6-8
+
+     .23......  2-3
+     ...45....  4-5
+
+     ....567..  5-7
+     ......789  7-9
+
+     .2345678.  2-8
+     ..34567..  3-7
+
+     .....6...  6-6
+     ...456...  4-6
+
+     .23456...  2-6
+     ...45678.  4-8
+   #+END_EXAMPLE
+
+   Some of the pairs have noticed that one of their assignments fully contains
+   the other. For example, =2-8= fully contains =3-7=, and =6-6= is fully contained by
+   =4-6=. In pairs where one assignment fully contains the other, one Elf in the
+   pair would be exclusively cleaning sections their partner will already be
+   cleaning, so these seem like the most in need of reconsideration. In this
+   example, there are 2 such pairs.
+
+   #+BEGIN_SRC clojure
+     (defn subset? [[l1 l2] [r1 r2]]
+       (and (>= r1 l1) (<= r2 l2)))
+
+     (defn either-subset? [left-range right-range]
+       (or (subset? left-range right-range)
+           (subset? right-range left-range)))
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/subset?        |
+   | #'advent2022.core/either-subset? |
+
+
+   In how many assignment pairs does one range fully contain the other?
+
+   #+NAME: count-assignment-subsets
+   #+BEGIN_SRC clojure
+     (->> (filter (fn [[left right]] (either-subset? left right)) assignments)
+          count)
+   #+END_SRC
+
+   #+RESULTS: count-assignment-subsets
+   : 560
+
+** DONE Part Two
+   CLOSED: [2022-12-04 Sun 18:26] SCHEDULED: <2022-12-04 Sun>
+
+   It seems like there is still quite a bit of duplicate work planned. Instead,
+   the Elves would like to know the number of pairs that /overlap at all/.
+
+   In the above example, the first two pairs (=2-4,6-8= and =2-3,4-5=) don't
+   overlap, while the remaining four pairs (=5-7,7-9=, =2-8,3-7=, =6-6,4-6=, and
+   =2-6,4-8=) do overlap:
+
+   - =5-7,7-9= overlaps in a single section, /7/.
+   - =2-8,3-7= overlaps all of the sections /3/ through /7/.
+   - =6-6,4-6= overlaps in a single section, /6/.
+   - =2-6,4-8= overlaps in sections /4/, /5/, and /6/.
+
+   #+BEGIN_SRC clojure
+     (defn overlaps? [[l1 l2] [r1 r2]]
+       (or (<= l1 r1 l2) (<= l1 r2 l2)
+           (<= r1 l1 r2) (<= r1 l2 r2)))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/overlaps?
+
+   So, in this example, the number of overlapping assignment pairs is /4/.
+
+   /In how many assignment pairs do the ranges overlap?/
+
+   #+NAME: count-assignment-overlaps
+   #+BEGIN_SRC clojure
+    (->> (filter (fn [[left right]] (overlaps? left right)) assignments)
+         count)
+   #+END_SRC
+
+   #+RESULTS: count-assignment-overlaps
+   : 839
+
+
+* Ch 5: Supply Stacks
+  :PROPERTIES:
+  :header-args: :tangle src/chapter5.clj
+  :END:
+
+  The expedition can depart as soon as the final supplies have been unloaded
+  from the ships. Supplies are stored in stacks of marked /crates/, but because
+  the needed supplies are buried under many other crates, the crates need to be
+  rearranged.
+
+** DONE Part One
+   CLOSED: [2022-12-05 Mon 11:43] SCHEDULED: <2022-12-05 Mon>
+
+   The ship has a /giant cargo/ crane capable of moving crates between stacks. To
+   ensure none of the crates get crushed or fall over, the crane operator will
+   rearrange them in a series of carefully-planned steps. After the crates are
+   rearranged, the desired crates will be at the top of each stack.
+
+   The Elves don't want to interrupt the crane operator during this delicate
+   procedure, but they forgot to ask her /which/ crate will end up where, and they
+   want to be ready to unload them as soon as possible so they can embark.
+
+   #+BEGIN_SRC clojure
+     (def day5-data (slurp "resources/day5_input.txt"))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/day5-data
+
+   They do, however, have a drawing of the starting stacks of crates /and/ the
+   rearrangement procedure (your puzzle input). For example:
+
+   #+BEGIN_EXAMPLE
+         [D]
+     [N] [C]
+     [Z] [M] [P]
+      1   2   3
+
+     move 1 from 2 to 1
+     move 3 from 1 to 3
+     move 2 from 2 to 1
+     move 1 from 1 to 2
+   #+END_EXAMPLE
+
+   In this example, there are three stacks of crates. Stack 1 contains two
+   crates: crate =Z= is on the bottom, and crate =N= is on top. Stack 2 contains
+   three crates; from bottom to top, they are crates =M=, =C=, and =D=. Finally, stack
+   3 contains a single crate, =P=.
+
+   #+BEGIN_SRC clojure
+     (defn parse-stack-row [line]
+       ;; Split line of format '[A] [B] [C]...' by 4 to get columns.
+       (let [parts (partition 4 4 [\space] line)]
+         (into []
+               (map (fn [n]
+                      ;; Filter the letter from each part or reduce to
+                      ;; a single ' ' if blank.
+                      (if (every? #(= \space %) n)
+                        \space
+                        (first (filter (set "ABCDEFGHIJKLMNOPQRSTUVWXYZ") n))))
+                    parts))))
+
+     (defn parse-instruction [line]
+       ;; Convert the instruction lines 'move N from S to D' to
+       ;; an int tuple3 of [N S D].
+       (into []
+             (take 3 (map #(Integer/parseInt %)
+                          (re-seq #"\d+" line)))))
+
+     (defn transpose-stacks [stacks]
+       ;; Convert the vertical stack string representation to an array
+       ;; of stacks (linked list so conj/take operate on front.
+       (for [x (range (count (first stacks)))]
+         (remove #(= \space %) (map #(nth % x) stacks))))
+
+     (def day5-parsed-data
+       (let [lines (clojure.string/split-lines day5-data)]
+         {:crates (into []
+                        (transpose-stacks
+                         (map parse-stack-row
+                              (filter #(clojure.string/includes? % "[")
+                                      lines))))
+          :instructions (into []
+                              (map parse-instruction
+                                   (filter #(clojure.string/includes? % "move")
+                                           lines)))}))
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/parse-stack-row   |
+   | #'advent2022.core/parse-instruction |
+   | #'advent2022.core/transpose-stacks  |
+   | #'advent2022.core/day5-parsed-data  |
+
+   In the parsed data struct then, =:crates= is a vector of the stacks from 0..n,
+   and =:instructions= is a list of tuples of the form =[count from to]=.
+
+   Then, the rearrangement procedure is given. In each step of the procedure, a
+   quantity of crates is moved from one stack to a different stack. In the first
+   step of the above rearrangement procedure, one crate is moved from stack 2 to
+   stack 1, resulting in this configuration:
+
+   #+BEGIN_EXAMPLE
+     [D]
+     [N] [C]
+     [Z] [M] [P]
+      1   2   3
+   #+END_EXAMPLE
+
+   In the second step, three crates are moved from stack 1 to stack 3. Crates are
+   moved /one at a time/, so the first crate to be moved (=D=) ends up below the
+   second and third crates:
+
+   #+BEGIN_EXAMPLE
+             [Z]
+             [N]
+         [C] [D]
+         [M] [P]
+      1   2   3
+   #+END_EXAMPLE
+
+   Then, both crates are moved from stack 2 to stack 1. Again, because crates are
+   moved /one at a time/, crate =C= ends up below crate =M=:
+
+   #+BEGIN_EXAMPLE
+             [Z]
+             [N]
+     [M]     [D]
+     [C]     [P]
+      1   2   3
+   #+END_EXAMPLE
+
+   Finally, one crate is moved from stack 1 to stack 2:
+
+   #+BEGIN_EXAMPLE
+             [Z]
+             [N]
+             [D]
+     [C] [M] [P]
+      1   2   3
+   #+END_EXAMPLE
+
+   The Elves just need to know which crate will end up on top of each stack; in
+   this example, the top crates are =C= in stack 1, =M= in stack 2, and =Z= in stack 3,
+   so you should combine these together and give the Elves the message =CMZ=.
+
+   The generic operation here is that we will transform the stack of crates by
+   performing the sequence of instructions successively on each new iteration. If
+   we parameterize the step function, we can separately define what a single
+   instruction must do, given the rules of the CrateMover-9000:
+
+   #+BEGIN_SRC clojure
+     (defn run-all [step-fn crates instructions]
+       (reduce step-fn crates instructions))
+
+     (defn run-step-cm9000 [crates [n from to]]
+       ;; Note: from,to are 1-indexed in the data.
+       (let [from (dec from)
+             to (dec to)
+             taken (take n (nth crates from))]
+         (-> crates
+             (update-in [from] #(drop n %))
+             (update-in [to] #(concat (reverse taken) %)))))
+   #+END_SRC
+
+   #+RESULTS:
+   | #'advent2022.core/run-all         |
+   | #'advent2022.core/run-step-cm9000 |
+
+   /After the rearrangement procedure completes, what crate ends up on top of
+   each stack?/
+
+   #+BEGIN_SRC clojure
+     (run-all run-step-cm9000
+              (:crates day5-parsed-data)
+              (:instructions day5-parsed-data))
+   #+END_SRC
+
+   #+RESULTS:
+   : [(\T \C \N \Z \B \B \B \D \G \T \D \C \M \M \R \P \P \B \Z \Q \V \G \C \B \P \Q \F \D \C \S \P) (\L) (\N) (\G \L \Q \H \H \V \M \C \F \D \S \J \J \Q \G \D \S) (\F \S) (\G) (\M) (\F) (\N)]
+
+   #+NAME: cratemover-9000-top-crates
+   #+BEGIN_SRC clojure
+     (->> (run-all run-step-cm9000
+                   (:crates day5-parsed-data)
+                   (:instructions day5-parsed-data))
+          (map first)
+          (apply str))
+   #+END_SRC
+
+   #+RESULTS: cratemover-9000-top-crates
+   : TLNGFGMFN
+
+** DONE Part Two
+   CLOSED: [2022-12-05 Mon 11:43] SCHEDULED: <2022-12-05 Mon>
+
+   As you watch the crane operator expertly rearrange the crates, you notice the
+   process isn't following your prediction.
+
+   Some mud was covering the writing on the side of the crane, and you quickly
+   wipe it away. The crane isn't a CrateMover 9000 - it's a /CrateMover 9001/.
+
+   The CrateMover 9001 is notable for many new and exciting features: air
+   conditioning, leather seats, an extra cup holder, and /the ability to pick up
+   and move multiple crates at once./
+
+   Again considering the example above, the crates begin in the same
+   configuration:
+
+   #+BEGIN_EXAMPLE
+         [D]
+     [N] [C]
+     [Z] [M] [P]
+      1   2   3
+   #+END_EXAMPLE
+
+   Moving a single crate from stack 2 to stack 1 behaves the same as before:
+
+   #+BEGIN_EXAMPLE
+      [D]
+      [N] [C]
+      [Z] [M] [P]
+       1   2   3
+   #+END_EXAMPLE
+
+   However, the action of moving three crates from stack 1 to stack 3 means
+   that those three moved crates stay in the same order, resulting in this new
+   configuration:
+
+   #+BEGIN_EXAMPLE
+            [D]
+            [N]
+        [C] [Z]
+        [M] [P]
+     1   2   3
+   #+END_EXAMPLE
+
+   Next, as both crates are moved from stack 2 to stack 1, they retain their
+   order as well:
+
+   #+BEGIN_EXAMPLE
+             [D]
+             [N]
+     [C]     [Z]
+     [M]     [P]
+      1   2   3
+   #+END_EXAMPLE
+
+   Finally, a single crate is still moved from stack 1 to stack 2, but now it's
+   crate =C= that gets moved:
+
+   #+BEGIN_EXAMPLE
+             [D]
+             [N]
+             [Z]
+     [M] [C] [P]
+      1   2   3
+   #+END_EXAMPLE
+
+   In this example, the CrateMover 9001 has put the crates in a totally
+   different order: =MCD=.
+
+   Before the rearrangement process finishes, update your simulation so that the
+   Elves know where they should stand to be ready to unload the final
+   supplies. After the rearrangement procedure completes, what crate ends up on
+   top of each stack?
+
+   #+BEGIN_SRC clojure
+     (defn run-step-cm9001 [crates [n from to]]
+       (let [from (dec from)
+             to (dec to)
+             taken (take n (nth crates from))]
+         (-> crates
+             (update-in [from] #(drop n %))
+             (update-in [to] #(concat taken %)))))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'advent2022.core/run-step-cm9001
+
+   #+BEGIN_SRC clojure
+     (run-all run-step-cm9001
+              (:crates day5-parsed-data)
+              (:instructions day5-parsed-data))
+   #+END_SRC
+
+   #+RESULTS:
+   : [(\F \S \S \G \N \D \M \S \Q \P \H \N \M \C \G \F \B \P \D \G \R \D \Q \S \Z \C \J \F \P \B \L) (\G) (\L) (\Q \T \Q \C \P \B \D \N \T \M \C \V \V \Z \F \H \G) (\J \B) (\C) (\M) (\B) (\D)]
+
+  #+NAME: cratemover-9001-top-crates
+   #+BEGIN_SRC clojure
+    (->> (run-all run-step-cm9001
+                  (:crates day5-parsed-data)
+                  (:instructions day5-parsed-data))
+         (map first)
+         (apply str))
+   #+END_SRC
+
+   #+RESULTS: cratemover-9001-top-crates
+   : FGLQJCMBD
+
+
+* Ch 6: ...
+  SCHEDULED: <2022-12-06 Tue>
+
+* Ch 7: ...
+  SCHEDULED: <2022-12-07 Wed>
+
+* Ch 8: ...
+  SCHEDULED: <2022-12-08 Thu>
+
+* Ch 9: ...
+  SCHEDULED: <2022-12-09 Fri>
+
+* Ch 10: ...
+  SCHEDULED: <2022-12-10 Sat>
+
+* Ch 11: ...
+
+* Ch 12: ...
+
+* Ch 13: ...
+
+* Ch 14: ...
+
+* Ch 15: ...
+
+* Ch 16: ...
+
+* Ch 17: ...
+
+* Ch 18: ...
+
+* Ch 19: ...
+
+* Ch 20: ...
+
+* Ch 21: ...
+
+* Ch 22: ...
+
+* Ch 23: ...
+
+* Ch 24: ...
+
+* Ch 25: ...
+
+
+* References
+
+  List any support references, interesting reading.
+
+* Appendix A: Helper Definitions
+
+  Additional boilerplate code. Probably namespace declarations will live down
+  here and not interfere with the readability of the narrative problems.
+
+* Appendix B: Example Chapter
+  :PROPERTIES:
+  :header-args: :tangle src/appendix_b.clj
+  :END:
+
+  For a definition of constant data, we don't need to echo the results back to
+  the buffer, it's fine that they are sent to the Clojure REPL.
+
+  #+NAME: ex-data
+  #+BEGIN_SRC clojure :results silent
+    (def ^:const numbers [3, 7, 12, 8, 23])
+  #+END_SRC
+
+  Similarly, when defining a named function we can be satisfied that it exists
+  in Clojure. All the result block would echo is the package and symbol name.
+
+  #+NAME: ex-problem-statement
+  #+BEGIN_SRC clojure :results silent
+    (defn add-two-numbers [a b]
+      (+ a b))
+  #+END_SRC
+
+  When we want to query something or call a function, the default =:results=
+  type will be the value of the expression. Alternatively we could specify
+  =:results output= if we want to instead capture anything sent to
+  =*standard-output*=.
+
+  #+NAME: ex-example1
+  #+BEGIN_SRC clojure
+    (map (partial add-two-numbers 5) numbers)
+  #+END_SRC
+
+  #+RESULTS: ex-example1
+  | 8 | 12 | 17 | 13 | 28 |
+
+  #+NAME: ex-example2
+  #+BEGIN_SRC clojure :results output
+    (printf "Sum of numbers: %d"
+            (reduce add-two-numbers numbers))
+  #+END_SRC
+
+  #+RESULTS: ex-example2
+  : Sum of numbers: 53
+
+  And that's pretty much as simple as I'll try to keep things.
